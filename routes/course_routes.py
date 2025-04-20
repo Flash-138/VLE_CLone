@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from db import get_db_connection
+from db import get_db_connection, DatabaseError
 from middleware.auth import role_required,token_required,course_enrollment_required
 from utils.helpers import success_response, error_response
 
@@ -76,43 +76,30 @@ def View_Courses_id(User_id):
 
 @course_bp.route('/register', methods=['POST'])
 @role_required(["student", "lecturer"])
-def register_course(User_id):
+def register_course(user_id):
     try:
         cnx = get_db_connection()
         cursor = cnx.cursor()
         content = request.json
 
-        course_id = (content['course_id'])
+        params = [
+            user_id,
+            content['course_id']
+        ]
 
-        if User_id//10000 == 100 and User_id >= 1000000 and User_id <= 1009999:
+        cursor.callproc('sp_register_course', params)
 
-            cursor.execute("""SELECT COUNT(user_id) AS course_count 
-                            FROM user_course 
-                            WHERE course_id = %s user_id LIKE "100%"
-                            GROUP BY course_id,user_id 
-                            order by course_count ASC
-                            ;""",course_id)
-            
-            course_count = cursor.fetchone()
-
-            if course_count[0] >= 1:
-                return error_response("Lecturer already assigned to course",450)
-        
-        cursor.execute("Select course_id from Course where course_id = (%s)",(course_id,))
-
-        if cursor.fetchone() is None:
-            return error_response(f"No course called {course_id} ", 404)
-        
-        cursor.execute("Insert into User_Course Values (%s,%s)",(User_id,course_id))
-    
-        
         cnx.commit()
+
         cursor.close()
         cnx.close()
         
-        return success_response(f"User {User_id} was added to course {course_id}", 200)
+        return success_response(f"User {user_id} was added to course", 200)
+    
+    except DatabaseError as err:
+        return error_response(err.msg, 400)
     except Exception as e:
-        return error_response({'error': str(e)}, 400)
+        return error_response(str(e), 500)
 
 
 @course_bp.route('/members', methods=['GET'])

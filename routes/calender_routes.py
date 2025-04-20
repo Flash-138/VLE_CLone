@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from db import get_db_connection
+from db import get_db_connection,DatabaseError
 from middleware.auth import role_required,token_required,course_enrollment_required
 from utils.helpers import success_response, error_response
 
@@ -59,19 +59,22 @@ def create_calender_Event_course(user_id,course_id):
         cnx = get_db_connection()
         cursor = cnx.cursor()
         content = request.json
-        event_id = int(content['event_id'])
-        title = int(content['title'])
-        event_date = content['event_date']
-
-        cursor.execute("INSERT INTO CalendarEvent (event_id,title, event_date) Values(%s%s%s)",
-                       (event_id,title,event_date))
-        cursor.execute("INSERT INTO CourseEvent (event_id,course_id) Values(%s%s)",
-                (event_id,course_id))
+        params = [
+            int(content['event_id']),
+            content['title'],
+            content['event_date'],
+            course_id
+        ]
+        
+        cursor.callproc('sp_create_calendar_event', params)
         
         cnx.commit()
         cursor.close()
         cnx.close()
         
         return success_response("Calender Event Created", 200)
+    except DatabaseError as err:
+        return error_response(err.msg, 400)
     except Exception as e:
-        return error_response({'error': str(e)}, 400)
+        return error_response(str(e))
+

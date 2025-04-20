@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from db import get_db_connection
+from db import get_db_connection,DatabaseError
 from middleware.auth import course_enrollment_required, role_required, token_required
 from utils.helpers import success_response, error_response
 
@@ -11,16 +11,20 @@ forum_bp = Blueprint("forum", __name__)
 def create_forum(user_id, course_id):
     try:
         data = request.json
-        forum_id = data["forum_id"]
-        title = data["title"]
-        info = data["info"]
-
+        params = [data["forum_id"],
+                  data["title"],
+                  data["info"],
+                  course_id]
+        
         cnx = get_db_connection()
         cursor = cnx.cursor()
-        cursor.execute("INSERT INTO Forum (forum_id, title, info) VALUES (%s, %s, %s)", (forum_id, title, info))
-        cursor.execute("INSERT INTO Course_Forum (forum_id, course_id) VALUES (%s, %s)", (forum_id, course_id))
+
+        cursor.callproc('sp_create_forum', params)
         cnx.commit()
+
         return success_response("Forum created")
+    except DatabaseError as err:
+        return error_response(err.msg, 400)
     except Exception as e:
         return error_response(str(e))
 
@@ -78,17 +82,14 @@ def create_thread(user_id, course_id, forum_id):
         cursor = cnx.cursor()
         content = request.json
 
-        thread_id = int(content['thread_id'])
-        message_info = content['message_info']
+        params = [
+            int(content['thread_id']),
+            content['message_info'],
+            forum_id,
+            user_id
+        ]
 
-        cursor.execute("INSERT INTO Thread (thread_id, message_info) VALUES (%s, %s)",
-                       (thread_id, message_info))
-
-        cursor.execute("INSERT INTO Forum_Thread (thread_id, forum_id) VALUES (%s, %s)",
-                       (thread_id, forum_id))
-
-        cursor.execute("INSERT INTO ThreadOwner (thread_id, user_id) VALUES (%s, %s)",
-                       (thread_id, user_id))
+        cursor.callproc('sp_create_thread', params)
 
         cnx.commit()
         cursor.close()
@@ -96,6 +97,8 @@ def create_thread(user_id, course_id, forum_id):
 
         return success_response("Thread created successfully", 201)
 
+    except DatabaseError as err:
+        return error_response(err.msg, 400)
     except Exception as e:
         return error_response({'error': str(e)}, 400)
 
@@ -127,6 +130,7 @@ def reply_to_thread(user_id, thread_id):
         cnx.close()
 
         return success_response("Reply added successfully", 201)
-    
+    except DatabaseError as err:
+        return error_response(err.msg, 400)
     except Exception as e:
-        return error_response({'error': str(e)}, 400)
+        return error_response(str(e), 500)
