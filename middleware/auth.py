@@ -10,6 +10,8 @@ def generate_token(User_id,role):
                 "role":role,
                 "exp": datetime.utcnow() + timedelta(hours=1),
             },current_app.config["SECRET_KEY"], algorithm="HS256")
+    return token
+
 def token_required(func):
     @wraps(func)
     def decorated(*args, **kwargs):
