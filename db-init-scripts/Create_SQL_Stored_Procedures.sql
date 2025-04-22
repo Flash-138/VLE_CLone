@@ -6,7 +6,7 @@ CREATE PROCEDURE sp_add_content(
     IN p_content_id      INT,
     IN p_content_name    VARCHAR(100),
     IN p_content_type    VARCHAR(50),
-    IN p_content_data_url VARCHAR(255),
+    IN p_content_data    LONGBLOB,
     IN p_section_id      INT,
     IN p_course_id       VARCHAR(25)
 )
@@ -20,8 +20,8 @@ BEGIN
             SET MESSAGE_TEXT = 'Section not part of course';
     END IF;
 
-    INSERT INTO Content(content_id, contentName, content_type, content_data_url)
-    VALUES(p_content_id, p_content_name, p_content_type, p_content_data_url);
+    INSERT INTO Content(content_id, contentName, content_type, content_data)
+    VALUES(p_content_id, p_content_name, p_content_type, p_content_data);
 
     INSERT INTO SectionContent(content_id, section_id)
     VALUES(p_content_id, p_section_id);
@@ -30,28 +30,44 @@ END;
 
 -- 2. ASSIGNMENT SUBMISSION & GRADING -------------------------------------
 
-CREATE PROCEDURE sp_submit_assignment(
-    IN p_submission_id INT,
-    IN p_user_id       INT,
-    IN p_course_id     VARCHAR(25),
+
+CREATE PROCEDURE sp_add_assignment(
     IN p_assignment_id INT,
-    IN p_document      BLOB
+    IN p_title         VARCHAR(100),
+    IN p_info          TEXT,
+    IN p_due_date      DATE,
+    IN p_document      LONGBLOB,
+    IN p_course_id     VARCHAR(25)
 )
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM Course_Assignment
-        WHERE course_id     = p_course_id
-          AND assignment_id = p_assignment_id
-    ) THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Assignment not associated with this course';
-    END IF;
+    INSERT INTO Assignment
+      (assignment_id, title, info, due_date, document)
+    VALUES
+      (p_assignment_id, p_title, p_info, p_due_date, p_document);
+
+    INSERT INTO Course_Assignment
+      (assignment_id, course_id)
+    VALUES
+      (p_assignment_id, p_course_id);
+END;
+//
+
+CREATE PROCEDURE sp_submit_assignment(
+    IN p_submission_id INT,
+    IN p_assignment_id INT,
+    IN p_document      LONGBLOB,
+    IN p_user_id       INT
+)
+BEGIN
 
     INSERT INTO Submission(submission_id, submission_date, document)
     VALUES(p_submission_id, NOW(), p_document);
 
     INSERT INTO StudentSubmission(submission_id, user_id)
     VALUES(p_submission_id, p_user_id);
+
+    INSERT INTO Grade(submission_id, assignment_id,grade)
+    VALUES(p_submission_id, p_assignment_id,NULL);
 END;
 //
 

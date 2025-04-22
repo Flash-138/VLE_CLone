@@ -2,7 +2,7 @@ CREATE OR REPLACE VIEW vw_course_content AS
 SELECT
   sc.course_id,
   s.section_id, s.section_name,
-  c.content_id, c.contentName, c.content_type, c.content_data_url
+  c.content_id, c.contentName, c.content_type, c.content_data
 FROM Section s
 JOIN SectionCourse sc  ON s.section_id = sc.section_id
 JOIN SectionContent sc2 ON s.section_id = sc2.section_id
@@ -15,6 +15,24 @@ FROM User_Course uc
 JOIN CourseEvent coe     ON uc.course_id = coe.course_id
 JOIN CalendarEvent ce    ON coe.event_id = ce.event_id;
 
+CREATE OR REPLACE VIEW vw_course_forums AS
+SELECT
+  cf.course_id,
+  f.forum_id,
+  f.title    AS forum_title,
+  f.info     AS forum_info
+FROM Course_Forum cf
+JOIN Forum f
+  ON cf.forum_id = f.forum_id;
+
+CREATE OR REPLACE VIEW vw_forum_threads AS
+SELECT
+  ft.forum_id,
+  t.thread_id,
+  t.message_info AS thread_message
+FROM Forum_Thread ft
+JOIN Thread t
+  ON ft.thread_id = t.thread_id;
 
 CREATE OR REPLACE VIEW vw_course_calendar AS
 SELECT
@@ -45,9 +63,14 @@ GROUP BY uc.user_id
 HAVING COUNT(uc.course_id) >= 3;
 
 CREATE OR REPLACE VIEW TopEnrolledCourses AS
-SELECT course_id, COUNT(user_id) AS enrollment_count
-FROM User_Course
-GROUP BY course_id
+SELECT
+  uc.course_id,
+  COUNT(uc.user_id) AS enrollment_count
+FROM User_Course uc
+JOIN User u
+  ON uc.user_id = u.user_id
+WHERE u.role = 'student'
+GROUP BY uc.course_id
 ORDER BY enrollment_count DESC
 LIMIT 10;
 

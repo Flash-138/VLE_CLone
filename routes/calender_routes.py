@@ -13,7 +13,7 @@ def get_calender_Event(user_id):
         cursor = cnx.cursor()
 
         content = request.json
-        event_date = int(content['event_date'])
+        event_date = (content['event_date'])
 
         cursor.execute("""SELECT event_id, title, event_date
                         FROM vw_user_calendar

@@ -103,16 +103,15 @@ def register_course(user_id,course_id):
 
 @course_bp.route('<string:course_id>/members', methods=['GET'])
 @token_required
-@course_enrollment_required()
-def View_user_courses(User_id,Course_id):
+def View_user_courses(user_id,course_id):
     try:
         cnx = get_db_connection()
-        cursor = cnx.cursor()
+        cursor = cnx.cursor() 
         cursor.execute("""SELECT uc.user_id,u.role
-                    From user_course uc
-                    Join  user u ON u.user_id = uc.user_id
+                    From User_Course uc
+                    Join  User u ON u.user_id = uc.user_id
                     Where Course_id = (%s);""",
-                    (Course_id,))
+                    (course_id,))
         Members = cursor.fetchall()
         if len(Members) == 0:
             raise ValueError
@@ -129,6 +128,57 @@ def View_user_courses(User_id,Course_id):
         cnx.close()
         return success_response(course_members, 200)
     except ValueError:
-        return error_response({'No Members': 'No members assigned to course found'}, 410)
-    except:
-        return error_response({'error': 'An error has occured'}, 400)
+        return error_response({'No Members': 'No members assigned to course found'}, 400)
+    except Exception as e:
+        return error_response({'error': str(e)}, 400)
+
+@course_bp.route('/<string:course_id>/section/create', methods=['POST'])
+@role_required('lecturer')
+@course_enrollment_required()
+def create_section(user_id,course_id):
+    try:
+        data = request.json
+        sid  = data['section_id']
+        name = data['section_name']
+
+        cnx = get_db_connection()
+        cur = cnx.cursor()
+
+        cur.execute("INSERT INTO Section(section_id, section_name) VALUES (%s, %s)", (sid, name))
+
+        cur.execute("INSERT INTO SectionCourse(section_id, course_id) VALUES (%s, %s)", (sid, course_id))
+        cnx.commit()
+        return success_response(f"Section {sid} created for course {course_id}", 200)
+    except Exception as e:
+            return error_response({'error': str(e)}, 400)
+    
+
+
+@course_bp.route('/<string:course_id>/section/view', methods=['GET'])
+@token_required
+@course_enrollment_required()
+def list_sections(user_id, course_id):
+    try:
+        cnx = get_db_connection()
+        cursor = cnx.cursor()
+        cursor.execute("""
+            SELECT s.section_id,
+                   s.section_name
+            FROM Section s
+            JOIN SectionCourse sc ON s.section_id = sc.section_id
+            WHERE sc.course_id = %s
+            ORDER BY s.section_id
+        """, (course_id,))
+        rows = cursor.fetchall()
+        cursor.close()
+        cnx.close()
+
+        sections = [
+            {"section_id": sid, "section_name": name}
+            for sid, name in rows
+        ]
+
+        return success_response(sections, 200)
+
+    except Exception as e:
+        return error_response(str(e), 400)
