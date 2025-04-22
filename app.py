@@ -15,8 +15,8 @@ app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET")
 
 app.register_blueprint(auth_bp, url_prefix="/auth")
 app.register_blueprint(course_bp, url_prefix="/course")
-app.register_blueprint(content_bp, url_prefix="/content")
-app.register_blueprint(forum_bp, url_prefix="/forum")
+app.register_blueprint(content_bp, url_prefix="/<string:course_id>/content")
+app.register_blueprint(forum_bp, url_prefix="/<string:course_id>/forum")
 app.register_blueprint(calendar_bp, url_prefix="/calendar")
 app.register_blueprint(report_bp, url_prefix="/reports")
 

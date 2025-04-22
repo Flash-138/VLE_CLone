@@ -19,7 +19,7 @@ def login():
 
         if record and record[0] == password:
             token = generate_token(user_id, record[1])
-            return success_response({"token": token})
+            return success_response({"message":"User Logged in","token": token})
         return error_response("Invalid credentials", 401)
     except Exception as e:
         return error_response(str(e))

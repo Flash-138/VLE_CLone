@@ -8,7 +8,7 @@ def generate_token(User_id,role):
     token =jwt.encode({
                 "user":User_id,
                 "role":role,
-                "exp": datetime.utcnow() + timedelta(hours=1),
+                "exp": datetime.datetime.now(datetime.UTC) + timedelta(hours=1),
             },current_app.config["SECRET_KEY"], algorithm="HS256")
     return token
 

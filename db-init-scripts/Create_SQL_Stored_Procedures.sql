@@ -99,13 +99,12 @@ BEGIN
         WHERE course_id = p_course_id
     ) THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = CONCAT('No course called ', p_course_id);
+            SET MESSAGE_TEXT = 'No course called ';
     END IF;
 
     INSERT INTO User_Course(user_id, course_id)
     VALUES(p_user_id, p_course_id);
-END;
-//
+END//
 
 -- 4. FORUM & THREAD MANAGEMENT -------------------------------------------
 

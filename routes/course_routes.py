@@ -74,17 +74,16 @@ def View_Courses_id(User_id):
 
 
 
-@course_bp.route('/register', methods=['POST'])
+@course_bp.route('<string:course_id>/register', methods=['POST'])
 @role_required(["student", "lecturer"])
-def register_course(user_id):
+def register_course(user_id,course_id):
     try:
         cnx = get_db_connection()
         cursor = cnx.cursor()
-        content = request.json
 
         params = [
             user_id,
-            content['course_id']
+            course_id
         ]
 
         cursor.callproc('sp_register_course', params)
@@ -102,7 +101,7 @@ def register_course(user_id):
         return error_response(str(e), 500)
 
 
-@course_bp.route('/members', methods=['GET'])
+@course_bp.route('<string:course_id>/members', methods=['GET'])
 @token_required
 @course_enrollment_required()
 def View_user_courses(User_id,Course_id):

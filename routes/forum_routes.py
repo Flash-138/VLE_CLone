@@ -103,7 +103,7 @@ def create_thread(user_id, course_id, forum_id):
         return error_response({'error': str(e)}, 400)
 
 
-@forum_bp.route('/Threads/<int:thread_id>/reply', methods=['POST'])
+@forum_bp.route('/threads/<int:thread_id>/reply', methods=['POST'])
 @token_required
 def reply_to_thread(user_id, thread_id):
     try:

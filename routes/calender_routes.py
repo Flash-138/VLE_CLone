@@ -30,7 +30,7 @@ def get_calender_Event(user_id):
     except Exception as e:
         return error_response({'error': str(e)}, 400)
 
-@calendar_bp.route('/view/course', methods=['GET'])
+@calendar_bp.route('/view/course/<string:course_id>', methods=['GET'])
 @token_required
 @course_enrollment_required()
 def get_calender_Event_course(user_id,course_id):
@@ -51,7 +51,7 @@ def get_calender_Event_course(user_id,course_id):
     except Exception as e:
         return error_response({'error': str(e)}, 400)
 
-@calendar_bp.route('/create', methods=['Post'])
+@calendar_bp.route('/<string:course_id>/create', methods=['Post'])
 @role_required("lecturer")
 @course_enrollment_required()
 def create_calender_Event_course(user_id,course_id):
