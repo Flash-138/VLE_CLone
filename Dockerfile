@@ -1,21 +1,19 @@
-# Dockerfile
-FROM python:3.11-slim
-
-# Install system deps (if any)
-RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Install Python deps
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy source
-COPY . .
-
-# Expose the port your Flask app listens on
-ENV PORT 8080
-EXPOSE 8080
-
-# Start command (Cloud Run expects the process to bind $PORT)
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+# Use official Python image
+ FROM python:3.10-slim
+ 
+ # Set working directory
+ WORKDIR /app
+ 
+ # Copy project files
+ COPY . .
+ 
+ RUN pip install --upgrade pip
+ 
+ # Install dependencies
+ RUN pip install --default-timeout=1000 --no-cache-dir -r requirements.txt
+ 
+ # Expose Flask port
+ EXPOSE 15000
+ 
+ # Run the app
+ CMD ["flask", "run", "--host= 127.0.0.1", "--port=15000", "--reload"]
