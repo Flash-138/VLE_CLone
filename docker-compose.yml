@@ -1,18 +1,8 @@
-services:
-  flask-app:
-    build: .
-    ports:
-      - "15000:15000"
-    volumes:
-      - .:/app
-    depends_on:
-      - db
-    env_file:
-      - .env
+version: '3.8'
 
+services:
   db:
     image: mysql:8.0
-    container_name: mysql_db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASS}
@@ -20,10 +10,24 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASS}
     ports:
-      - "3307:3306"
+      - "3307:3306"     
     volumes:
       - mysql-data:/var/lib/mysql
       - ./db-init-scripts:/docker-entrypoint-initdb.d
+
+  flask-app:
+    build: .
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - "15000:15000"    
+    volumes:
+      - .:/app
+    command: flask run --host=0.0.0.0 --port=15000
+    restart: on-failure
+
 
 volumes:
   mysql-data:

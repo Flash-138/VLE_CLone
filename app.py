@@ -33,8 +33,5 @@ def list_routes(app):
 
 
 if __name__ == '__main__':
-    print("\nRegistered Routes:")
-    for route in list_routes(app):
-        print(route)
         
     app.run(port=15000, debug=True)

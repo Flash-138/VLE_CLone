@@ -9,6 +9,4 @@ class Config:
     DB_PASS = os.getenv("DB_PASS")
     DB_HOST = os.getenv("DB_HOST")
     DB_NAME = os.getenv("DB_NAME")
-    DB_PORT = int(os.getenv("PORT", 3306))
-    JWT_ALGORITHM = "HS256"
-    JWT_EXP_DELTA_HOURS = 1  # token lifespan in hours
+    DB_PORT = int(os.getenv("PORT"))
