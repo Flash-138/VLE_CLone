@@ -300,7 +300,7 @@ def user_course_insert(register,sql,user_type):
         end = "," if i < len(entries) - 1 else ""
         sql.write(f"""("{user}", "{course}"){end}\n""")
     
-    sql.write(";\n")
+    sql.write(";\n;\n")
     
 if __name__ == '__main__':
     print("Start")
@@ -317,7 +317,7 @@ if __name__ == '__main__':
     Student_Register  = (Student_Course(students,courses))
     Lecturers_Register = Lecturers_course(lecturers,courses)
 
-    with open ("db-init-scripts\\insert.sql","w") as sql:
+    with open ("db-init-scripts\\5_insert.sql","w") as sql:
         
         sql.write("USE School_Management_System \n\n")
         user_insert(students,sql,"students")
